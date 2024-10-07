@@ -2,7 +2,11 @@ import {
   Client,
   GatewayIntentBits,
   TextChannel,
-  Message
+  Message,
+  REST,
+  Routes,
+  ApplicationCommandOptionType,
+  ChatInputCommandInteraction
 } from 'discord.js';
 import { PrismaClient } from '@prisma/client';
 
@@ -17,8 +21,53 @@ const client = new Client({
 const prisma = new PrismaClient();
 const PREFIX = 'null';
 
-client.once('ready', () => {
+// Slash command setup
+const commands = [
+  {
+    name: "setautonull",
+    description: 'Set auto-null for a channel',
+    options: [
+      {
+        name: 'channel',
+        type: ApplicationCommandOptionType.Channel,
+        description: 'The channel to set auto-null for',
+        required: true,
+      },
+      {
+        name: 'minutes',
+        type: ApplicationCommandOptionType.Integer,
+        description: 'Number of minutes before messages are deleted',
+        required: true,
+      },
+    ],
+  },
+];
+
+const rest = new REST({ version: '10' }).setToken(process.env.DISCORD_TOKEN || '');
+
+client.once('ready', async () => {
   console.log('Bot is ready!');
+
+  try {
+    console.log('Started refreshing application (/) commands.');
+
+    await rest.put(
+      Routes.applicationCommands(client.user!.id),
+      { body: commands },
+    );
+
+    console.log('Successful reloading application (/) commands.');
+  } catch (error) {
+    console.error(error);
+  }
+});
+
+client.on('interactionCreate', async (interaction) => {
+  if (!interaction.isChatInputCommand()) return;
+
+  if (interaction.commandName === 'setautonull') {
+    await handleSlashSetAutoNull(interaction);
+  }
 });
 
 client.on('messageCreate', async (message: Message) => {
@@ -31,7 +80,7 @@ client.on('messageCreate', async (message: Message) => {
 
   switch (command) {
     case 'set':
-      await handleSetAutoDelete(message, args);
+      await handleSetAutoNull(message, args);
       break;
     case 'listsettings':
       await handleListSettings(message);
@@ -42,7 +91,7 @@ client.on('messageCreate', async (message: Message) => {
   }
 });
 
-async function handleSetAutoDelete(message: Message, args: string[]) {
+async function handleSetAutoNull(message: Message, args: string[]) {
   if (args.length !== 2) {
     message.reply('Usage: null set <channel> <minutes>');
     return;
@@ -83,6 +132,45 @@ async function handleSetAutoDelete(message: Message, args: string[]) {
   } catch (error) {
     console.error('Error setting null: ', error);
     message.reply('An error occurred while setting null.');
+  }
+}
+
+async function handleSlashSetAutoNull(interaction: ChatInputCommandInteraction) {
+  const channel = interaction.options.getChannel('channel');
+  const minutes = interaction.options.getInteger('minutes');
+
+  if (!channel || !minutes || channel.type !== 0) { // 0 is the type for text channels
+    await interaction.reply({ content: 'Please provide a valid text channel and number of minutes.', ephemeral: true });
+    return;
+  }
+
+  try {
+    const existingSetting = await prisma.guildSettings.findFirst({
+      where: {
+        serverId: interaction.guildId!,
+        channelId: channel.id
+      }
+    });
+
+    if (existingSetting) {
+      await prisma.guildSettings.update({
+        where: { id: existingSetting.id },
+        data: { minutes: minutes }
+      });
+    } else {
+      await prisma.guildSettings.create({
+        data: {
+          serverId: interaction.guildId!,
+          channelId: channel.id,
+          minutes; minutes
+        }
+      });
+    }
+
+    await interaction.reply(`Null set for <#${channel.id}> after ${minutes} minutes.`);
+  } catch (error) {
+    console.error('Error setting null: ', error);
+    await interaction.reply({ content: 'An error occurred while setting null.', ephemeral: true });
   }
 }
 
