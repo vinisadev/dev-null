@@ -184,7 +184,7 @@ async function handleSlashSetAutoNull(interaction: ChatInputCommandInteraction) 
 
 async function handleListSettings(message: Message) {
   try {
-    const settings = await prisma.nullSettings.findMany({
+    const settings = await prisma.guildSettings.findMany({
       where: { serverId: message.guild!.id }
     });
 
@@ -220,7 +220,7 @@ async function handleDeleteSetting(message: Message, args: string[]) {
       }
     });
 
-    if (deletedSetting.coung > 0) {
+    if (deleteSetting.count > 0) {
       message.reply(`Null setting removed for <#${channelId}>.`);
     } else {
       message.reply(`No null setting found for <#${channelId}>.`);
