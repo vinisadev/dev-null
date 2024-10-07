@@ -94,7 +94,7 @@ client.on('messageCreate', async (message: Message) => {
       await handleListSettings(message);
       break;
     case 'deletesetting':
-      await handleDeleteSetting(messag,e args);
+      await handleDeleteSetting(message, args);
       break;
   }
 });
@@ -131,7 +131,7 @@ async function handleSetAutoNull(message: Message, args: string[]) {
         data: {
           serverId: message.guild!.id,
           channelId: channelId,
-          minutes; minutes
+          minutes: minutes
         }
       });
     }
@@ -170,7 +170,7 @@ async function handleSlashSetAutoNull(interaction: ChatInputCommandInteraction) 
         data: {
           serverId: interaction.guildId!,
           channelId: channel.id,
-          minutes; minutes
+          minutes: minutes
         }
       });
     }
