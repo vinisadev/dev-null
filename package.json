@@ -1,0 +1,23 @@
+{
+  "name": "dev-null",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": "https://github.com/vinisadev/dev-null.git",
+  "author": "Vincenzo Fehring <vinfehring@gmail.com>",
+  "license": "MIT",
+  "scripts": {
+    "start": "node ./dist/index.js",
+    "build": "tsc",
+    "dev": "ts-node ./src/index.ts"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.20.0",
+    "discord.js": "^14.16.3"
+  },
+  "devDependencies": {
+    "@types/node": "^22.7.4",
+    "prisma": "^5.20.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.6.2"
+  }
+}
