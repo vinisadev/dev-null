@@ -15,8 +15,11 @@ datasource db {
 
 model guildSettings {
   id            Int       @id @default(autoincrement())
-  channelId     String    @unique
+  serverId      String
+  channelId     String
   minutes       Int
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
+
+  @@index([serverId, channelId])
 }
