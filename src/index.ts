@@ -6,7 +6,8 @@ import {
   REST,
   Routes,
   ApplicationCommandOptionType,
-  ChatInputCommandInteraction
+  ChatInputCommandInteraction,
+  PermissionFlagsBits
 } from 'discord.js';
 import { PrismaClient } from '@prisma/client';
 
@@ -26,6 +27,7 @@ const commands = [
   {
     name: "setautonull",
     description: 'Set auto-null for a channel',
+    defaultMemberPermissions: PermissionFlagsBits.Administrator,
     options: [
       {
         name: 'channel',
@@ -74,6 +76,12 @@ client.on('messageCreate', async (message: Message) => {
   if (message.author.bot || !message.guild) return;
 
   if (!message.content.toLowerCase().startsWith(PREFIX)) return;
+
+  // Check for administrator privileges
+  if (!message.member?.permissions.has(PermissionFlagsBits.Administrator)) {
+    message.reply('You need to have administrator privileges to use this command.');
+    return;
+  }
 
   const args = message.content.slice(PREFIX.length).trim().split(/\s+/);
   const command = args.shift()?.toLowerCase();
